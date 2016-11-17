@@ -76,19 +76,70 @@ export const toIntList = (list, radix = 10) => list.map((item) => parseInt(item,
 export const splitRgbaString = (str) => str.replace('rgba(', '').replace(')', '').split(',');
 
 /**
+ * Create a new list of new colour objects from a given palette
+ * @param {string} palette - List of colour objects
+ * @returns {array} New list of colour objects
+ */
+export const deepCopy = (palette) => palette.map((colour) => Object.assign({}, colour));
+
+/**
+ * Convert a prinary R, G or B value to a normalised value fixed to 9dp
+ * @param {number} primary - primary value to normalise
+ * @returns {number} Normalised value to 9dp
+ */
+export const normalisePrimary = (primary) => Number((primary / 255).toFixed(9));
+
+/**
  * Returns a new list of colour objects, augmenting each colour object with an RGB values hash
  * @param {array} palette - list of starting colours
  * @returns {array} New list of colours
  */
-export const getRgb = (palette) => {
-	return palette.map((colour) => {
-		const nextColour = Object.assign({}, colour);
-		const colourValue = nextColour.value;
-		nextColour.rgb = isHex(colourValue) ? hexToRgb(colourValue) : 
-				isRgba(colourValue) ? rgbaToRgbAlpha(colourValue) : 
-				null;
-		return nextColour;
+export const setRgbPrimaryValues = (palette) => {
+	return deepCopy(palette).map((colour) => {
+		const colourValue = colour.value;
+		colour.rgb = isHex(colourValue) ? hexToRgb(colourValue) : 
+			isRgba(colourValue) ? rgbaToRgbAlpha(colourValue) : 
+			null;
+		return colour;
 	});
 };
 
-const colours = compose(getRgb)(palette);
+/**
+ * Returns a new list of colour objects, augmenting each colour object with normalised R, G and B values
+ * @param {array} palette - list of starting colours
+ * @returns {array} New list of colours
+ */
+export const setNormalisedRgbPrimaryValues = (palette) => {
+	return deepCopy(palette).map((colour) => {
+		const rgb = colour.rgb;
+		colour._r = normalisePrimary(rgb.r);
+		colour._g = normalisePrimary(rgb.g);
+		colour._b = normalisePrimary(rgb.b);
+		return colour;
+	});
+};
+
+/**
+ * Returns a new list of colour objects, augmenting each colour object with R, G and B range values
+ * @param {array} palette - list of starting colours
+ * @returns {array} New list of colours
+ */
+export const setRgbPrimaryRangeValues = (palette) => {
+	return deepCopy(palette).map((colour) => {
+			const { _r, _g, _b } =  colour;
+			colour.primaryMin = Math.min(_r, _g, _b);
+			colour.primaryMax = Math.max(_r, _g, _b);
+			colour.primaryDelta = colour.primaryMax - colour.primaryMin;
+			return colour;
+		});
+};
+
+// PUBLIC API
+const colours = compose(
+	setRgbPrimaryRangeValues,
+	setNormalisedRgbPrimaryValues,
+	setRgbPrimaryValues
+)(palette);
+
+console.warn('COLOURS', colours);
+

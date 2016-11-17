@@ -1,7 +1,12 @@
 import expect from 'expect';
 import deepFreeze from 'deep-freeze';
 import * as colours from 'src/colours';
-import { startPalette, rgbPalette } from './helpers/stub/palette';
+import {
+    startPalette,
+    rgbPalette,
+    normalisedRgbPalette,
+    normalisedRgbRangePalette
+} from './helpers/stub/palette';
 
 describe('colours module', () => {
     describe('hexToRgb()',  () => {
@@ -76,7 +81,19 @@ describe('colours module', () => {
         });
     });
 
-     describe('isRgba()',  () => {
+    describe('deepCopy()',  () => {
+        it('should not mutate its palette argument', () => {
+            const actual = colours.deepCopy(startPalette);
+            const equalColours = actual.filter((colour, i) => colour === startPalette[i]);
+            expect(equalColours.length).toBe(0);
+        });
+        it('should return a palette matching the given palette', () => {
+            const actual = colours.deepCopy(startPalette);
+            expect(actual).toEqual(startPalette);
+        });
+    });
+
+    describe('isRgba()',  () => {
         context('when a valid RGBA string is passed in', () => {
             it('should return true', () => {
                 const validRgba = [
@@ -105,32 +122,48 @@ describe('colours module', () => {
         })
     });
 
-    describe('getRgb()',  () => {
-        it('should not mutate its palette argument', () => {
-            const frozenPalette = startPalette.map((colour) => {
-                return deepFreeze(colour);
-            });
-            const actual = colours.getRgb(frozenPalette);
-            const expected = rgbPalette;
-            expect(actual === expected).toBe(false);
-        });
+    describe('normalisePrimary()',  () => {
+        it('should return a normalised primary value', () => {
+            const r = 255;
+            const actual = colours.normalisePrimary(r);
+            const expected = 1.0000000000000;
+            expect(actual).toBe(expected);
+        })
+    });
 
-         context('when a list of RGBA colours is passed in', () => {
-            it('should return a list of objects with a name, value and an rgb property containing r, g, b and alpha keys', () => {
+    describe('setRgbPrimaryValues()',  () => {
+        context('when a list of RGBA colours is passed in', () => {
+            it('should return a list of colour objects augmented with an rgb property containing r, g, b and alpha keys', () => {
                 const palette = [...startPalette[0]];
                 const expected = [...rgbPalette[0]];
-                const actual = colours.getRgb(palette);
+                const actual = colours.setRgbPrimaryValues(palette);
                 expect(actual).toEqual(expected);
             });
         })
 
         context('when a list of hex colours is passed in', () => {
-            it('should return a list of objects with a name, value and an rgb property containing r, g, and b keys', () => {
+            it('should return a list of colour objects augmented with an rgb property containing r, g, and b keys', () => {
                 const palette = [...startPalette[1]];
                 const expected = [...rgbPalette[1]];
-                const actual = colours.getRgb(palette);
+                const actual = colours.setRgbPrimaryValues(palette);
                 expect(actual).toEqual(expected);
             });
         });
+    });
+
+    describe('setNormalisedRgbPrimaryValues()',  () => {
+        it('should return a list of colour objects augmented with _r, _g and _b keys', () => {
+            const actual = colours.setNormalisedRgbPrimaryValues(rgbPalette);
+            expect(actual).toEqual(normalisedRgbPalette);
+        });
+    });
+
+    describe('setRgbPrimaryRangeValues()',  () => {
+        context('when a list of RGBA colours is passed in', () => {
+            it('should return a list of colour objects augmented with primaryMin, primaryMax and primaryDelta properties', () => {
+                const actual = colours.setRgbPrimaryRangeValues(normalisedRgbPalette);
+                expect(actual).toEqual(normalisedRgbRangePalette);
+            });
+        })
     });
 });
