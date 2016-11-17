@@ -126,16 +126,83 @@ export const setNormalisedRgbPrimaryValues = (palette) => {
  */
 export const setRgbPrimaryRangeValues = (palette) => {
 	return deepCopy(palette).map((colour) => {
-			const { _r, _g, _b } =  colour;
-			colour.primaryMin = Math.min(_r, _g, _b);
-			colour.primaryMax = Math.max(_r, _g, _b);
-			colour.primaryDelta = colour.primaryMax - colour.primaryMin;
-			return colour;
-		});
+		const { _r, _g, _b } =  colour;
+		colour.primaryMin = Math.min(_r, _g, _b);
+		colour.primaryMax = Math.max(_r, _g, _b);
+		colour.primaryDelta = colour.primaryMax - colour.primaryMin;
+		return colour;
+	});
 };
+
+/**
+ * Returns a new list of colour objects, augmenting each colour object with a colour type (greyscale, alpha, opaque)
+ * @param {array} palette - list of starting colours
+ * @returns {array} New list of colours
+ */
+export const setColourType = (palette) => {
+	return deepCopy(palette).map((colour) => {
+		const isGreyscale = colour.primaryDelta === 0;
+		const isAlpha = !!colour.rgb.alpha;
+		const isOpaque = !isAlpha && !isGreyscale;
+		if (isGreyscale) {
+			colour.colourType = 'greyscale';
+		} else if (isAlpha) {
+			colour.colourType = 'alpha';
+		} else if (isOpaque) {
+			colour.colourType = 'opaque';
+		} else {
+			colour.colourType = null;
+		}
+		return colour;
+	});
+};
+
+/**
+ * Returns a new list of colour objects, augmenting each colour object with a hue property
+ * @param {array} palette - list of starting colours
+ * @returns {array} New list of colours
+ */
+export const setHue = (palette) => {
+	return deepCopy(palette).map((colour) => {
+		const colourType = colour.colourType;
+		colour.hue = colourType === 'greyscale' ? null : calcHue(colour);
+		return colour;
+	});
+};
+
+/**
+ * Calculates the hue value for a given colour
+ * @param {object} colour - map of colour values
+ * @returns {number} A numerical hue value
+ */
+export const calcHue = (colour) => {
+	const { primaryMax, _r, _g, _b, primaryDelta } = colour;
+	if (primaryMax === _r) {
+		return 60 * ((_g - _b) / primaryDelta % 6);
+	} else if (primaryMax === _g) {
+		return 60 * ((_b - _r) / primaryDelta + 2); 
+	} else if (primaryMax === _b) {
+		return 60 * ((_r - _g) / primaryDelta + 4);
+	}
+};
+
+/**
+ * Returns an object containing the palette as a proprty and groups for greyscale, alpha and opaque colours
+ * @param {array} palette - list of starting colours
+ * @returns {object} New colour map
+ */
+export const makeColourTypeGroups = (palette) => ({
+	palette: deepCopy(palette),
+	greyscale: [],
+	alpha: [],
+	opaque: [],
+});
 
 // PUBLIC API
 const colours = compose(
+	makeColourTypeGroups,
+	setHue,
+	setColourType,
 	setRgbPrimaryRangeValues,
 	setNormalisedRgbPrimaryValues,
 	setRgbPrimaryValues

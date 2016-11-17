@@ -5,7 +5,9 @@ import {
     startPalette,
     rgbPalette,
     normalisedRgbPalette,
-    normalisedRgbRangePalette
+    normalisedRgbRangePalette,
+    groupedPalette,
+    huePalette,
 } from './helpers/stub/palette';
 
 describe('colours module', () => {
@@ -87,7 +89,7 @@ describe('colours module', () => {
             const equalColours = actual.filter((colour, i) => colour === startPalette[i]);
             expect(equalColours.length).toBe(0);
         });
-        it('should return a palette matching the given palette', () => {
+        it('should return a new palette matching the given palette', () => {
             const actual = colours.deepCopy(startPalette);
             expect(actual).toEqual(startPalette);
         });
@@ -165,5 +167,54 @@ describe('colours module', () => {
                 expect(actual).toEqual(normalisedRgbRangePalette);
             });
         })
+    });
+
+    describe('setColourType()', () => {
+        const actual = colours.setColourType(normalisedRgbRangePalette);
+        context('when colour has an alpha value', () => {
+            it('should set colourType to "alpha"', () => {
+                expect(actual[0].colourType).toBe('alpha'); 
+            });
+        });
+        context('when colour primary delta is greater than zero and there is no alpha value', () => {
+            it('should set colourType to "opaque"', () => {
+                expect(actual[1].colourType).toBe('opaque'); 
+            });
+        });
+        context('when colour primary delta is zero', () => {
+            it('should set colourType to "greyscale"', () => {
+                expect(actual[2].colourType).toBe('greyscale'); 
+            });
+        });
+    });
+
+     describe('setHue()', () => {
+        const actual = colours.setHue(groupedPalette);
+        context('when the colour type is alpha', () => {
+            it('should set a hue', () => {
+                expect(actual[0].hue).toBe(huePalette[0].hue); 
+            });
+        });
+        context('when the colour type is opaque', () => {
+            it('should set a hue', () => {
+                expect(actual[1].hue).toBe(huePalette[1].hue); 
+            });
+        });
+        context('when the colour type is greyscale', () => {
+            it('should not set a hue', () => {
+                expect(actual[2].hue).toBe(huePalette[2].hue); 
+            });
+        });
+    });
+    
+    describe('makeColourTypeGroups()',  () => {
+        it('should return a map containing a copy of the given palette and lists for each colour type', () => {
+            const actual = colours.makeColourTypeGroups(normalisedRgbRangePalette);
+            expect(actual.palette === normalisedRgbRangePalette).toBe(false);
+            expect(actual.palette).toEqual(normalisedRgbRangePalette);
+            expect(actual.greyscale).toEqual([]);
+            expect(actual.alpha).toEqual([]);
+            expect(actual.opaque).toEqual([]);
+        });
     });
 });
