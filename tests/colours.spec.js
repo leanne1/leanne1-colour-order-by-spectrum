@@ -1,5 +1,6 @@
 import expect from 'expect';
 import deepFreeze from 'deep-freeze';
+import { COLOUR_TYPE } from 'src/constants/config';
 import * as colours from 'src/colours';
 import {
     startPalette,
@@ -74,7 +75,7 @@ describe('colours module', () => {
             });
         });
     });
-   
+
     describe('splitRgbaString()',  () => {
         it('should return an array of R, G, B and A values', () => {
             const actual = colours.splitRgbaString('rgba(255,255,255,0.5');
@@ -83,14 +84,14 @@ describe('colours module', () => {
         });
     });
 
-    describe('deepCopy()',  () => {
+    describe('deepCopyColourList()',  () => {
         it('should not mutate its palette argument', () => {
-            const actual = colours.deepCopy(startPalette);
+            const actual = colours.deepCopyColourList(startPalette);
             const equalColours = actual.filter((colour, i) => colour === startPalette[i]);
             expect(equalColours.length).toBe(0);
         });
         it('should return a new palette matching the given palette', () => {
-            const actual = colours.deepCopy(startPalette);
+            const actual = colours.deepCopyColourList(startPalette);
             expect(actual).toEqual(startPalette);
         });
     });
@@ -172,49 +173,69 @@ describe('colours module', () => {
     describe('setColourType()', () => {
         const actual = colours.setColourType(normalisedRgbRangePalette);
         context('when colour has an alpha value', () => {
-            it('should set colourType to "alpha"', () => {
-                expect(actual[0].colourType).toBe('alpha'); 
+            it(`should set colourType to "${COLOUR_TYPE.ALPHA}"`, () => {
+                expect(actual[0].colourType).toBe(COLOUR_TYPE.ALPHA);
             });
         });
         context('when colour primary delta is greater than zero and there is no alpha value', () => {
-            it('should set colourType to "opaque"', () => {
-                expect(actual[1].colourType).toBe('opaque'); 
+            it(`should set colourType to "${COLOUR_TYPE.OPAQUE}"`, () => {
+                expect(actual[1].colourType).toBe(COLOUR_TYPE.OPAQUE);
             });
         });
         context('when colour primary delta is zero', () => {
-            it('should set colourType to "greyscale"', () => {
-                expect(actual[2].colourType).toBe('greyscale'); 
+            it(`should set colourType to "${COLOUR_TYPE.GREYSCALE}"`, () => {
+                expect(actual[2].colourType).toBe(COLOUR_TYPE.GREYSCALE);
             });
         });
     });
 
-     describe('setHue()', () => {
+    describe('setHue()', () => {
         const actual = colours.setHue(groupedPalette);
-        context('when the colour type is alpha', () => {
+        context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
             it('should set a hue', () => {
-                expect(actual[0].hue).toBe(huePalette[0].hue); 
+                expect(actual[0].hue).toBe(huePalette[0].hue);
             });
         });
-        context('when the colour type is opaque', () => {
+        context(`when the colour type is ${COLOUR_TYPE.OPAQUE}`, () => {
             it('should set a hue', () => {
-                expect(actual[1].hue).toBe(huePalette[1].hue); 
+                expect(actual[1].hue).toBe(huePalette[1].hue);
             });
         });
-        context('when the colour type is greyscale', () => {
+        context(`when the colour type is ${COLOUR_TYPE.GREYSCALE}`, () => {
             it('should not set a hue', () => {
-                expect(actual[2].hue).toBe(huePalette[2].hue); 
+                expect(actual[2].hue).toBe(huePalette[2].hue);
             });
         });
     });
-    
-    describe('makeColourTypeGroups()',  () => {
-        it('should return a map containing a copy of the given palette and lists for each colour type', () => {
-            const actual = colours.makeColourTypeGroups(normalisedRgbRangePalette);
-            expect(actual.palette === normalisedRgbRangePalette).toBe(false);
-            expect(actual.palette).toEqual(normalisedRgbRangePalette);
-            expect(actual.greyscale).toEqual([]);
-            expect(actual.alpha).toEqual([]);
-            expect(actual.opaque).toEqual([]);
+
+    describe('assignToColourGroup()',  () => {
+        it('should contain a palette key with a new copy of the starting palette', () => {
+
         });
+        context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
+            it(`should assign it to an ${COLOUR_TYPE.ALPHA} list`, () => {
+
+            });
+        });
+        context(`when the colour type is ${COLOUR_TYPE.OPAQUE}`, () => {
+            it(`should assign it to an ${COLOUR_TYPE.OPAQUE} list`, () => {
+
+            });
+        });
+        context(`when the colour type is ${COLOUR_TYPE.GREYSCALE}`, () => {
+            it(`should assign it to a ${COLOUR_TYPE.GREYSCALE} list`, () => {
+
+            });
+        });
+    });
+
+    describe('sortColorGroups()',  () => {
+        // [Takes the colourMap and returns a new colourMap] with each colour type sorted
+
+        // 1. Deep copy the colourMap object => colourMap object. This includes deepCopying the lists
+
+        // sortColour()
+        // for each colour key on the colourMap
+        // sort the array
     });
 });

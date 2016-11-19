@@ -18,9 +18,9 @@ export const rgbPalette = [
         value: 'rgba(20,133,244,0.5)',
         name: 'oceanBlue50pc',
         rgb: {
-        	alpha: 0.5,
-        	r: 20,
-        	g: 133,
+            alpha: 0.5,
+            r: 20,
+            g: 133,
             b: 244,
         },
     },
@@ -28,19 +28,19 @@ export const rgbPalette = [
         value: '86de09',
         name: 'limeGreen',
         rgb: {
-	        r: 134,
-	        g: 222,
+            r: 134,
+            g: 222,
             b: 9,
-	    },
+        },
     },
     {
         value: '888888',
         name: 'middleEarth',
         rgb: {
-	        r: 136,
-	        g: 136,
+            r: 136,
+            g: 136,
             b: 136,
-	    },
+        },
     }
 ];
 
