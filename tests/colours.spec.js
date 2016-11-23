@@ -9,6 +9,7 @@ import {
     normalisedRgbRangePalette,
     groupedPalette,
     huePalette,
+	huePaletteMulti,
 } from './helpers/stub/palette';
 
 describe('colours module', () => {
@@ -54,7 +55,7 @@ describe('colours module', () => {
             const list = ['1.34', 77, 4.9];
             const expected = [1, 77, 4];
             const actual = colours.toIntList(list);
-            expect(actual === expected).toBe(false);
+            expect(actual).toNotBe(expected);
         });
 
         context('when no radix parameter is specified', () => {
@@ -208,29 +209,65 @@ describe('colours module', () => {
         });
     });
 
-    describe('assignToColourGroup()',  () => {
-        it('should contain a palette key with a new copy of the starting palette', () => {
+	describe('getAlpha()', () => {
+		it('should return a list of alpha colours', () => {
+			const actual = colours.getAlpha(huePalette);
+			expect(actual).toEqual([huePalette[0]]);
+		});
+	});
 
+	describe('getOpaque()', () => {
+		it('should return a list of opaque colours', () => {
+			const actual = colours.getOpaque(huePalette);
+			expect(actual).toEqual([huePalette[1]]);
+		});
+	});
+
+	describe('getGreyscale()', () => {
+		it('should return a list of greyscale colours', () => {
+			const actual = colours.getGreyscale(huePalette);
+			expect(actual).toEqual([huePalette[2]]);
+		});
+	});
+
+    describe('assignToColourGroup()', () => {
+        let actual;
+
+        beforeEach(() => {
+        	actual = colours.assignToColourGroup(huePalette);
+        });
+
+    	it('should contain a palette key with a new copy of the starting palette', () => {
+			expect(actual.palette).toEqual(huePalette);
+		    expect(actual.palette).toNotBe(huePalette);
         });
         context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
             it(`should assign it to an ${COLOUR_TYPE.ALPHA} list`, () => {
-
+	            expect(actual[COLOUR_TYPE.ALPHA]).toEqual([huePalette[0]]);
             });
         });
         context(`when the colour type is ${COLOUR_TYPE.OPAQUE}`, () => {
             it(`should assign it to an ${COLOUR_TYPE.OPAQUE} list`, () => {
-
+	            expect(actual[COLOUR_TYPE.OPAQUE]).toEqual([huePalette[1]]);
             });
         });
         context(`when the colour type is ${COLOUR_TYPE.GREYSCALE}`, () => {
             it(`should assign it to a ${COLOUR_TYPE.GREYSCALE} list`, () => {
-
+	            expect(actual[COLOUR_TYPE.GREYSCALE]).toEqual([huePalette[2]]);
             });
         });
     });
 
-    describe('sortColorGroups()',  () => {
-        // [Takes the colourMap and returns a new colourMap] with each colour type sorted
+	describe('sortColorGroups()',  () => {
+		it('should not mutate its palette argument', () => {
+			const actual = colours.sortColorsByGroup(huePaletteMulti);
+			expect(actual.palette).toEqual(huePaletteMulti);
+			expect(actual).toNotBe(huePaletteMulti);
+			expect(actual[COLOUR_TYPE.ALPHA]).toEqual([huePaletteMulti[0], huePaletteMulti[1]]);
+			expect(actual[COLOUR_TYPE.OPAQUE]).toEqual([huePaletteMulti[2], huePaletteMulti[3]]);
+			expect(actual[COLOUR_TYPE.GREYSCALE]).toEqual([huePaletteMulti[4], huePaletteMulti[5]]);
+		});
+		// [Takes the colourMap and returns a new colourMap] with each colour type sorted
 
         // 1. Deep copy the colourMap object => colourMap object. This includes deepCopying the lists
 

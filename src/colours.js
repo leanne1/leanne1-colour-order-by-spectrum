@@ -3,7 +3,7 @@ import curry from 'curry';
 import isHex from 'is-hex';
 import { COLOUR_TYPE } from './constants/config';
 
-const palette = [
+const startPalette = [
 	{
 		value: 'rgba(20,133,244,0.5)',
 		name: 'oceanBlue50pc'
@@ -64,16 +64,16 @@ export const isRgba = (rgbaString) => {
 
 /**
  * Create a new list of integer values from a list of non-integer values
- * @param {array} list - list to transform
+ * @param {Array} list - list to transform
  * @param {number} radix - optional integer radix (defaults to 10)
- * @returns {array} New list of integer values
+ * @returns {Array} New list of integer values
  */
 export const toIntList = (list, radix = 10) => list.map((item) => parseInt(item, radix));
 
 /**
  * Split an rgba string into an array of R, G, B and A values
  * @param {string} str - RGBA string to split
- * @returns {array} Array of R, G, B and A values
+ * @returns {Array} Array of R, G, B and A values
  */
 export const splitRgbaString = (str) => str.replace('rgba(', '').replace(')', '').split(',');
 
@@ -81,13 +81,13 @@ export const splitRgbaString = (str) => str.replace('rgba(', '').replace(')', ''
  * deepCopyColourList
  * Create a new list of new colour objects from a given palette
  * @param {string} list - List of colour objects
- * @returns {array} New list of colour objects
+ * @returns {Array} New list of colour objects
  */
 export const deepCopyList = curry((fn, list) => list.map(fn));
 export const deepCopyColourList = deepCopyList((colour) => Object.assign({}, colour));
 
 /**
- * Convert a prinary R, G or B value to a normalised value fixed to 9dp
+ * Convert a primary R, G or B value to a normalised value fixed to 9dp
  * @param {number} primary - primary value to normalise
  * @returns {number} Normalised value to 9dp
  */
@@ -95,8 +95,8 @@ export const normalisePrimary = (primary) => Number((primary / 255).toFixed(9));
 
 /**
  * Returns a new list of colour objects, augmenting each colour object with an RGB values hash
- * @param {array} palette - list of starting colours
- * @returns {array} New list of colours
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
  */
 export const setRgbPrimaryValues = (palette) => {
 	return deepCopyColourList(palette).map((colour) => {
@@ -110,8 +110,8 @@ export const setRgbPrimaryValues = (palette) => {
 
 /**
  * Returns a new list of colour objects, augmenting each colour object with normalised R, G and B values
- * @param {array} palette - list of starting colours
- * @returns {array} New list of colours
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
  */
 export const setNormalisedRgbPrimaryValues = (palette) => {
 	return deepCopyColourList(palette).map((colour) => {
@@ -125,8 +125,8 @@ export const setNormalisedRgbPrimaryValues = (palette) => {
 
 /**
  * Returns a new list of colour objects, augmenting each colour object with R, G and B range values
- * @param {array} palette - list of starting colours
- * @returns {array} New list of colours
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
  */
 export const setRgbPrimaryRangeValues = (palette) => {
 	return deepCopyColourList(palette).map((colour) => {
@@ -140,8 +140,8 @@ export const setRgbPrimaryRangeValues = (palette) => {
 
 /**
  * Returns a new list of colour objects, augmenting each colour object with a colour type (greyscale, alpha, opaque)
- * @param {array} palette - list of starting colours
- * @returns {array} New list of colours
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
  */
 export const setColourType = (palette) => {
 	return deepCopyColourList(palette).map((colour) => {
@@ -164,8 +164,8 @@ export const setColourType = (palette) => {
 
 /**
  * Returns a new list of colour objects, augmenting each colour object with a hue property
- * @param {array} palette - list of starting colours
- * @returns {array} New list of colours
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
  */
 export const setHue = (palette) => {
 	return deepCopyColourList(palette).map((colour) => {
@@ -191,31 +191,60 @@ export const calcHue = (colour) => {
 	}
 };
 
-// TODO
-export const filterList = curry((fn, list, type) => list.filter(fn));
-export const filterListByColourType = filterList((colour) => colour.colourType === COLOUR_TYPE[type]);
+/**
+ * Returns a list of colours filtered by colour type
+ * @param {Array} palette - list of starting colours
+ * @param {Array} type - colour type to get
+ * @returns {Array} Array of colours of specified colour type
+ */
+export const filterByColourType = (palette, type) => palette.filter((colour) => colour.colourType === type);
+/**
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} Array of alpha colours
+ */
+export const getAlpha = (palette) => filterByColourType(palette, COLOUR_TYPE.ALPHA);
+/**
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} Array of opaque colours
+ */
+export const getOpaque = (palette) => filterByColourType(palette, COLOUR_TYPE.OPAQUE);
+/**
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} Array of greyscale colours
+ */
+export const getGreyscale = (palette) => filterByColourType(palette, COLOUR_TYPE.GREYSCALE);
 
 /**
  * Returns an object containing palette, alpha, opaque and greyscale lists
- * @param {array} palette - list of starting colours
+ * @param {Array} palette - list of starting colours
  * @returns {object} New colour map
  */
 export const assignToColourGroup = (palette) => ({
 	palette: deepCopyColourList(palette),
-	[COLOUR_TYPE.ALPHA]: deepCopyColourList(palette.filter((colour) => colour.colourType === COLOUR_TYPE.ALPHA)),
-	[COLOUR_TYPE.OPAQUE]: deepCopyColourList(palette.filter((colour) => colour.colourType === COLOUR_TYPE.OPAQUE)),
-	[COLOUR_TYPE.GREYSCALE]: deepCopyColourList(palette.filter((colour) => colour.colourType === COLOUR_TYPE.GREYSCALE)),
+	[COLOUR_TYPE.ALPHA]: deepCopyColourList(getAlpha(palette)),
+	[COLOUR_TYPE.OPAQUE]: deepCopyColourList(getOpaque(palette)),
+	[COLOUR_TYPE.GREYSCALE]: deepCopyColourList(getGreyscale(palette)),
 });
+
+/**
+ * Returns an object containing palette, alpha, opaque and greyscale lists which each colour list sorted
+ * @param {Array} palette - list of starting colours
+ * @returns {object} New colour map
+ */
+export const sortColorsByGroup = (palette) => {
+	const colourMap = assignToColourGroup(palette);
+	return colourMap;
+}
 
 // PUBLIC API
 const colours = compose(
-	assignToColourGroup,
+	sortColorsByGroup,
 	setHue,
 	setColourType,
 	setRgbPrimaryRangeValues,
 	setNormalisedRgbPrimaryValues,
 	setRgbPrimaryValues
-)(palette);
+)(startPalette);
 
 console.warn('COLOURS', colours);
 
