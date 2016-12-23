@@ -1,5 +1,4 @@
 import expect from 'expect';
-import deepFreeze from 'deep-freeze';
 import { COLOUR_TYPE } from 'src/constants/config';
 import * as colours from 'src/colours';
 import {
@@ -10,6 +9,7 @@ import {
     groupedPalette,
     huePalette,
 	huePaletteMulti,
+	colourMap,
 } from './helpers/stub/palette';
 
 describe('colours module', () => {
@@ -53,9 +53,8 @@ describe('colours module', () => {
     describe('toIntList()',  () => {
         it('should not mutate its list argument', () => {
             const list = ['1.34', 77, 4.9];
-            const expected = [1, 77, 4];
             const actual = colours.toIntList(list);
-            expect(actual).toNotBe(expected);
+            expect(actual).toNotBe(list);
         });
 
         context('when no radix parameter is specified', () => {
@@ -89,7 +88,9 @@ describe('colours module', () => {
         it('should not mutate its palette argument', () => {
             const actual = colours.deepCopyColourList(startPalette);
             const equalColours = actual.filter((colour, i) => colour === startPalette[i]);
-            expect(equalColours.length).toBe(0);
+	        expect(startPalette).toEqual(actual);
+            expect(startPalette).toNotBe(actual);
+	        expect(equalColours.length).toBe(0);
         });
         it('should return a new palette matching the given palette', () => {
             const actual = colours.deepCopyColourList(startPalette);
@@ -137,17 +138,19 @@ describe('colours module', () => {
 
     describe('setRgbPrimaryValues()',  () => {
         context('when a list of RGBA colours is passed in', () => {
-            it('should return a list of colour objects augmented with an rgb property containing r, g, b and alpha keys', () => {
+	        it('should return a list of colour objects augmented with an rgb property containing r, g, b and alpha keys', () => {
                 const palette = [...startPalette[0]];
+                Object.freeze(palette);
                 const expected = [...rgbPalette[0]];
                 const actual = colours.setRgbPrimaryValues(palette);
                 expect(actual).toEqual(expected);
             });
-        })
+        });
 
         context('when a list of hex colours is passed in', () => {
             it('should return a list of colour objects augmented with an rgb property containing r, g, and b keys', () => {
                 const palette = [...startPalette[1]];
+	            Object.freeze(palette);
                 const expected = [...rgbPalette[1]];
                 const actual = colours.setRgbPrimaryValues(palette);
                 expect(actual).toEqual(expected);
@@ -157,7 +160,9 @@ describe('colours module', () => {
 
     describe('setNormalisedRgbPrimaryValues()',  () => {
         it('should return a list of colour objects augmented with _r, _g and _b keys', () => {
-            const actual = colours.setNormalisedRgbPrimaryValues(rgbPalette);
+            const palette = [...rgbPalette];
+	        Object.freeze(palette);
+        	const actual = colours.setNormalisedRgbPrimaryValues(palette);
             expect(actual).toEqual(normalisedRgbPalette);
         });
     });
@@ -165,14 +170,23 @@ describe('colours module', () => {
     describe('setRgbPrimaryRangeValues()',  () => {
         context('when a list of RGBA colours is passed in', () => {
             it('should return a list of colour objects augmented with primaryMin, primaryMax and primaryDelta properties', () => {
-                const actual = colours.setRgbPrimaryRangeValues(normalisedRgbPalette);
+	            const palette = [...normalisedRgbPalette];
+	            Object.freeze(palette);
+	            const actual = colours.setRgbPrimaryRangeValues(palette);
                 expect(actual).toEqual(normalisedRgbRangePalette);
             });
         })
     });
 
     describe('setColourType()', () => {
-        const actual = colours.setColourType(normalisedRgbRangePalette);
+	    let actual, palette;
+
+	    before(() => {
+		    palette = [...normalisedRgbRangePalette];
+		    Object.freeze(palette);
+		    actual = colours.setColourType(palette);
+	    });
+
         context('when colour has an alpha value', () => {
             it(`should set colourType to "${COLOUR_TYPE.ALPHA}"`, () => {
                 expect(actual[0].colourType).toBe(COLOUR_TYPE.ALPHA);
@@ -191,8 +205,15 @@ describe('colours module', () => {
     });
 
     describe('setHue()', () => {
-        const actual = colours.setHue(groupedPalette);
-        context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
+	    let actual, palette;
+
+	    before(() => {
+		    palette = [...groupedPalette];
+		    Object.freeze(palette);
+		    actual = colours.setHue(palette);
+	    });
+
+	    context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
             it('should set a hue', () => {
                 expect(actual[0].hue).toBe(huePalette[0].hue);
             });
@@ -209,70 +230,125 @@ describe('colours module', () => {
         });
     });
 
-	describe('getAlpha()', () => {
-		it('should return a list of alpha colours', () => {
-			const actual = colours.getAlpha(huePalette);
-			expect(actual).toEqual([huePalette[0]]);
-		});
-	});
+    describe('filterByColourType()', () => {
+	    let palette;
 
-	describe('getOpaque()', () => {
-		it('should return a list of opaque colours', () => {
-			const actual = colours.getOpaque(huePalette);
-			expect(actual).toEqual([huePalette[1]]);
-		});
-	});
+    	before(() => {
+		    palette = [...huePalette];
+		    Object.freeze(palette);
+	    });
 
-	describe('getGreyscale()', () => {
-		it('should return a list of greyscale colours', () => {
-			const actual = colours.getGreyscale(huePalette);
-			expect(actual).toEqual([huePalette[2]]);
-		});
-	});
+	    describe('getAlpha()', () => {
+		    it('should return a list of alpha colours', () => {
+			    const actual = colours.getAlpha(palette);
+			    expect(actual).toEqual([palette[0]]);
+		    });
+	    });
+
+	    describe('getOpaque()', () => {
+		    it('should return a list of opaque colours', () => {
+			    const actual = colours.getOpaque(palette);
+			    expect(actual).toEqual([palette[1]]);
+		    });
+	    });
+
+	    describe('getGreyscale()', () => {
+		    it('should return a list of greyscale colours', () => {
+			    const actual = colours.getGreyscale(palette);
+			    expect(actual).toEqual([palette[2]]);
+		    });
+	    });
+    });
 
     describe('assignToColourGroup()', () => {
         let actual;
+	    const palette = [...huePalette];
+	    Object.freeze(palette);
 
         beforeEach(() => {
-        	actual = colours.assignToColourGroup(huePalette);
+        	actual = colours.assignToColourType(palette);
         });
 
     	it('should contain a palette key with a new copy of the starting palette', () => {
-			expect(actual.palette).toEqual(huePalette);
-		    expect(actual.palette).toNotBe(huePalette);
+			expect(actual.palette).toEqual(palette);
+		    expect(actual.palette).toNotBe(palette);
         });
         context(`when the colour type is ${COLOUR_TYPE.ALPHA}`, () => {
             it(`should assign it to an ${COLOUR_TYPE.ALPHA} list`, () => {
-	            expect(actual[COLOUR_TYPE.ALPHA]).toEqual([huePalette[0]]);
+	            expect(actual[COLOUR_TYPE.ALPHA]).toEqual([palette[0]]);
             });
         });
         context(`when the colour type is ${COLOUR_TYPE.OPAQUE}`, () => {
             it(`should assign it to an ${COLOUR_TYPE.OPAQUE} list`, () => {
-	            expect(actual[COLOUR_TYPE.OPAQUE]).toEqual([huePalette[1]]);
+	            expect(actual[COLOUR_TYPE.OPAQUE]).toEqual([palette[1]]);
             });
         });
         context(`when the colour type is ${COLOUR_TYPE.GREYSCALE}`, () => {
             it(`should assign it to a ${COLOUR_TYPE.GREYSCALE} list`, () => {
-	            expect(actual[COLOUR_TYPE.GREYSCALE]).toEqual([huePalette[2]]);
+	            expect(actual[COLOUR_TYPE.GREYSCALE]).toEqual([palette[2]]);
             });
         });
     });
 
 	describe('sortColorGroups()',  () => {
-		it('should not mutate its palette argument', () => {
-			const actual = colours.sortColorsByGroup(huePaletteMulti);
-			expect(actual.palette).toEqual(huePaletteMulti);
-			expect(actual).toNotBe(huePaletteMulti);
-			expect(actual[COLOUR_TYPE.ALPHA]).toEqual([huePaletteMulti[0], huePaletteMulti[1]]);
-			expect(actual[COLOUR_TYPE.OPAQUE]).toEqual([huePaletteMulti[2], huePaletteMulti[3]]);
-			expect(actual[COLOUR_TYPE.GREYSCALE]).toEqual([huePaletteMulti[4], huePaletteMulti[5]]);
+		let actual;
+		const palette = [...huePaletteMulti];
+		Object.freeze(palette);
+
+		beforeEach(() => {
+			actual = colours.sortColorsByGroup(palette);
 		});
-		// [Takes the colourMap and returns a new colourMap] with each colour type sorted
 
-        // 1. Deep copy the colourMap object => colourMap object. This includes deepCopying the lists
+		it('should sort the opaque colour list by position in visible spectrum', () => {
+			expect(actual[COLOUR_TYPE.OPAQUE][0].name).toBe('razzmatazz');
+			expect(actual[COLOUR_TYPE.OPAQUE][1].name).toBe('limeGreen');
+		});
 
-        // sortColour()
-        // for each colour key on the colourMap
-        // sort the array
-    });
+		it('should sort the alpha colour list by position in visible spectrum and then opacity with most opaque first', () => {
+			expect(actual[COLOUR_TYPE.ALPHA][0].name).toBe('venetianRed50pc');
+			expect(actual[COLOUR_TYPE.ALPHA][1].name).toBe('oceanBlue50pc');
+			expect(actual[COLOUR_TYPE.ALPHA][2].name).toBe('oceanBlue20pc');
+		});
+
+		it('should sort the greyscale colour list by position in visible spectrum starting with the darkest', () => {
+			expect(actual[COLOUR_TYPE.GREYSCALE][0].name).toBe('nero');
+			expect(actual[COLOUR_TYPE.GREYSCALE][1].name).toBe('middleEarth');
+		});
+	});
+
+	describe('clean()',  () => {
+		let actual;
+		const palette = Object.assign({}, colourMap);
+		Object.freeze(palette);
+
+		beforeEach(() => {
+			actual = colours.clean(palette);
+		});
+
+		it('should return an object containing only three color lists', () => {
+			expect(actual.palette).toBe(undefined);
+			expect(Object.keys(actual).length).toBe(3);
+			expect(Array.isArray(actual[COLOUR_TYPE.OPAQUE])).toBe(true);
+			expect(Array.isArray(actual[COLOUR_TYPE.ALPHA])).toBe(true);
+			expect(Array.isArray(actual[COLOUR_TYPE.GREYSCALE])).toBe(true);
+		});
+
+		it('should contain only value and name keys for colour objects', () => {
+			const alphaKeys = Object.keys(actual[COLOUR_TYPE.ALPHA][0]);
+			const opaqueKeys = Object.keys(actual[COLOUR_TYPE.OPAQUE][0]);
+			const greyscaleKeys = Object.keys(actual[COLOUR_TYPE.GREYSCALE][0]);
+
+			expect(alphaKeys.length).toBe(2);
+			expect(alphaKeys[0]).toBe('value');
+			expect(alphaKeys[1]).toBe('name');
+
+			expect(opaqueKeys.length).toBe(2);
+			expect(opaqueKeys[0]).toBe('value');
+			expect(opaqueKeys[1]).toBe('name');
+
+			expect(greyscaleKeys.length).toBe(2);
+			expect(greyscaleKeys[0]).toBe('value');
+			expect(greyscaleKeys[1]).toBe('name');
+		});
+	});
 });
