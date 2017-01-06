@@ -1,5 +1,7 @@
 # leanne1-colour-swatch
 
+The script uses a [found algorithm](http://stackoverflow.com/questions/23397594/sql-order-by-color-hex-code#answer-23399689) for sorting colours
+
 ## Working demo
 
 https://leanne1.github.io/leanne1-colour-swatch/

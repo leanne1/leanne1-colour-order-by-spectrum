@@ -23,6 +23,7 @@ export default class DemoPage extends Component {
 		const { labelColourDefault } = this.state;
 		return Object
 			.keys(colours)
+			.reverse()
 			.map((colourList, i) => (
 			<section className='colour-group' key={i}>
 				<h2>{colourList}</h2>
