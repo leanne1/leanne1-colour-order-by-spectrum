@@ -111,6 +111,6 @@ const generateHexList = (count) => {
 };
 const generateRandomHex = () => '#'+(Math.random()*0xFFFFFF<<0).toString(16);
 const randomHexList = generateHexList(100).filter((hex) => hex.value.length === 7);
-const finalColourList = [...randomHexList, ...startPalette];
+export const finalColourList = [...randomHexList, ...startPalette];
 
 render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
