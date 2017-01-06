@@ -1,6 +1,6 @@
 import expect from 'expect';
-import { COLOUR_TYPE } from 'src/constants/config';
-import * as colours from 'src/colours';
+import { COLOUR_TYPE } from 'src/colour-swatch/constants/config';
+import * as colours from 'src/colour-swatch';
 import {
     startPalette,
     rgbPalette,
@@ -84,7 +84,20 @@ describe('colours module', () => {
         });
     });
 
-    describe('deepCopyColourList()',  () => {
+	describe('trimPrefix()',  () => {
+		it('should return the string with prefix removed', () => {
+			const actual = colours.trimPrefix('rgba','rgba(255,255,255,0.5)');
+			const expected = '(255,255,255,0.5)';
+			expect(actual).toEqual(expected);
+		});
+		it('should return the original string when specified prefix is not present', () => {
+			const actual = colours.trimPrefix('rgba','(255,255,255,0.5)');
+			const expected = '(255,255,255,0.5)';
+			expect(actual).toEqual(expected);
+		});
+	});
+
+	describe('deepCopyColourList()',  () => {
         it('should not mutate its palette argument', () => {
             const actual = colours.deepCopyColourList(startPalette);
             const equalColours = actual.filter((colour, i) => colour === startPalette[i]);
@@ -306,8 +319,10 @@ describe('colours module', () => {
 
 		it('should sort the alpha colour list by position in visible spectrum and then opacity with most opaque first', () => {
 			expect(actual[COLOUR_TYPE.ALPHA][0].name).toBe('venetianRed50pc');
-			expect(actual[COLOUR_TYPE.ALPHA][1].name).toBe('oceanBlue50pc');
-			expect(actual[COLOUR_TYPE.ALPHA][2].name).toBe('oceanBlue20pc');
+			expect(actual[COLOUR_TYPE.ALPHA][1].name).toBe('oceanBlue20pc');
+			expect(actual[COLOUR_TYPE.ALPHA][2].name).toBe('oceanBlue50pc');
+			expect(actual[COLOUR_TYPE.ALPHA][3].name).toBe('oceanBlue70pc');
+
 		});
 
 		it('should sort the greyscale colour list by position in visible spectrum starting with the darkest', () => {

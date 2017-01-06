@@ -224,28 +224,15 @@ export const assignToColourType = (palette) => ({
  * @param {object} b - colour object
  * @returns {Number} Index of comparison
  */
-const sortOpaque = (a, b) => a.hue - b.hue;
+const sortByHue = (a, b) => a.hue - b.hue;
 
 /**
- * Sort colour by hue and then opacity with red hues / most opaque colours sorted lowest
+ * Sort colour by alpha value with most transparent sorted lowest
  * @param {object} a - colour object
  * @param {object} b - colour object
  * @returns {Number} Index of comparison
  */
-const sortAlpha = (a, b) => {
-	if (a.hue > b.hue) {
-		return 1;
-	} else if (a.hue < b.hue) {
-		return -1;
-	}
-	if (a.alpha < b.alpha) {
-		return -1;
-	} else if (a.alpha > b.alpha) {
-		return 1;
-	} else {
-		return 0;
-	}
-};
+const sortByAlpha = (a, b) => a.rgb.alpha - b.rgb.alpha;
 
 /**
  * Sort colour by red value (for greyscale)
@@ -253,7 +240,15 @@ const sortAlpha = (a, b) => {
  * @param {object} b - colour object
  * @returns {Number} Index of comparison
  */
-const sortGreyScale = (a, b) => a.rgb.r - b.rgb.r;
+const sortByRed = (a, b) => a.rgb.r - b.rgb.r;
+
+/**
+ * Sort colour by hue and then opacity with red hues / most opaque colours sorted lowest
+ * @param {object} a - colour object
+ * @param {object} b - colour object
+ * @returns {Number} Index of comparison
+ */
+const sortAlpha = (a, b) => sortByHue(a, b) ? sortByHue(a, b) : sortByAlpha(a, b);
 
 /**
  * Returns an object containing palette, alpha, opaque and greyscale lists which each colour list sorted by spectrum
@@ -262,9 +257,9 @@ const sortGreyScale = (a, b) => a.rgb.r - b.rgb.r;
  */
 export const sortColorsByGroup = (palette) => {
 	const colourMap = assignToColourType(palette);
-	colourMap[COLOUR_TYPE.OPAQUE].sort(sortOpaque);
+	colourMap[COLOUR_TYPE.OPAQUE].sort(sortByHue);
 	colourMap[COLOUR_TYPE.ALPHA].sort(sortAlpha);
-	colourMap[COLOUR_TYPE.GREYSCALE].sort(sortGreyScale);
+	colourMap[COLOUR_TYPE.GREYSCALE].sort(sortByRed);
 	return colourMap;
 };
 

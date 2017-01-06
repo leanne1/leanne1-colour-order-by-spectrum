@@ -242,6 +242,24 @@ export const huePalette = [
 
 export const huePaletteMulti = [
 	{
+		value: 'rgba(20,133,244,0.7)',
+		name: 'oceanBlue70pc',
+		rgb: {
+			alpha: 0.7,
+			r: 20,
+			g: 133,
+			b: 244,
+		},
+		_r: 0.078431373,
+		_g: 0.521568627,
+		_b: 0.956862745,
+		primaryMin: 0.078431373,
+		primaryMax: 0.956862745,
+		primaryDelta: 0.878431372,
+		colourType: 'alpha',
+		hue: 209.7321428998326,
+	},
+	{
 		value: 'rgba(20,133,244,0.5)',
 		name: 'oceanBlue50pc',
 		rgb: {

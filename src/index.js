@@ -64,7 +64,8 @@ const startPalette = [
 	{
 		value: '#00ffff',
 		name: 'aqua',
-	},{
+	},
+	{
 		value: '#ffa07a',
 		name: 'salmon',
 	},
@@ -232,5 +233,32 @@ const startPalette = [
 	},
 ];
 
-console.warn('COLOURS', colours(startPalette));
-render(<DemoPage colours={colours(startPalette)} />, document.querySelector('#app'));
+const reds = [
+	{
+		value: '#ffa07a',
+		name: 'salmon',
+	},
+	{
+		value: '#FF6F00',
+		name: 'fireOrange',
+	},
+	{
+		value: '#FF9800',
+		name: 'tangerine',
+	},
+	{
+		value: '#d2691e',
+		name: 'chocolate',
+	},
+	{
+		value: '#deb887',
+		name: 'burlyWood',
+	},
+	{
+		value: '#b22222',
+		name: 'fireBrick',
+	},
+];
+
+console.warn(colours(reds));
+render(<DemoPage colours={colours(reds)} />, document.querySelector('#app'));
