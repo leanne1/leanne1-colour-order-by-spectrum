@@ -3,6 +3,48 @@ import curry from 'curry';
 import isHex from 'is-hex';
 import { COLOUR_TYPE } from './constants/config';
 
+// VALUE UTILS
+/**
+ * Create a new list of integer values from a list of non-integer values
+ * @param {Array} list - list to transform
+ * @param {number} radix - optional integer radix (defaults to 10)
+ * @returns {Array} New list of integer values
+ */
+export const toIntList = (list, radix = 10) => list.map((item) => parseInt(item, radix));
+
+/**
+ * Split an rgba string into an array of R, G, B and A values
+ * @param {string} str - RGBA string to split
+ * @returns {Array} Array of R, G, B and A values
+ */
+export const splitRgbaString = (str) => str.replace('rgba(', '').replace(')', '').split(',');
+
+/**
+ * Trim a given prefix string from a given string
+ * @param {string} prefix - prefix to trim
+ * * @param {string} str - String to remove prefix from
+ * @returns {String} String without prefix
+ */
+export const trimPrefix = (prefix, str) => str.startsWith(prefix) ? str.substr(prefix.length) : str;
+
+// LIST COPY UTILS
+/**
+ * deepCopyColourList
+ * Create a new list of new colour objects from a given palette
+ * @param {string} list - List of colour objects
+ * @returns {Array} New list of colour objects
+ */
+export const copyList = curry((fn, list) => list.map(fn));
+export const deepCopyColourList = copyList((colour) => Object.assign({}, colour));
+
+/**
+ * mapNewColourList
+ * Return a function that takes a mapping function over a deeply copied colour list
+ * @param {string} palette - List of colour objects to deep copy and map over
+ * @returns {function} A mapping function over the copied colour list
+ */
+export const mapNewColourList = (palette) => (fn) => deepCopyColourList(palette).map(fn);
+
 /**
  * Convert a hex code to R, G and B hash
  * Currently only supports 6 char hex codes.
@@ -45,38 +87,6 @@ export const isRgba = (rgbaString) => {
 	return /rgba\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,?\s*([01]\.?\d*?)?\)/.test(rgbaString);
 };
 
-/**
- * Create a new list of integer values from a list of non-integer values
- * @param {Array} list - list to transform
- * @param {number} radix - optional integer radix (defaults to 10)
- * @returns {Array} New list of integer values
- */
-export const toIntList = (list, radix = 10) => list.map((item) => parseInt(item, radix));
-
-/**
- * Split an rgba string into an array of R, G, B and A values
- * @param {string} str - RGBA string to split
- * @returns {Array} Array of R, G, B and A values
- */
-export const splitRgbaString = (str) => str.replace('rgba(', '').replace(')', '').split(',');
-
-/**
- * Trim a given prefix string from a given string
- * @param {string} prefix - prefix to trim
- * * @param {string} str - String to remove prefix from
- * @returns {String} String without prefix
- */
-export const trimPrefix = (prefix, str) => str.startsWith(prefix) ? str.substr(prefix.length) : str;
-
-
-/**
- * deepCopyColourList
- * Create a new list of new colour objects from a given palette
- * @param {string} list - List of colour objects
- * @returns {Array} New list of colour objects
- */
-export const copyList = curry((fn, list) => list.map(fn));
-export const deepCopyColourList = copyList((colour) => Object.assign({}, colour));
 
 /**
  * Convert a primary R, G or B value to a normalised value fixed to 9dp
@@ -85,34 +95,60 @@ export const deepCopyColourList = copyList((colour) => Object.assign({}, colour)
  */
 export const normalisePrimary = (primary) => Number((primary / 255).toFixed(9));
 
+
+
+
 /**
- * Returns a new list of colour objects, augmenting each colour object with an RGB values hash
- * @param {Array} palette - list of starting colours
- * @returns {Array} New list of colours
+ * Augment each colour object with with an RGB values hash
+ * @param {object} colour - colour map
+ * @returns {object} Augmented colour map
  */
-export const setRgbPrimaryValues = (palette) => {
-	return deepCopyColourList(palette).map((colour) => {
-		const colourValue = trimPrefix('#', colour.value);
-		colour.rgb = isHex(colourValue) ? hexToRgb(colourValue) :
-			isRgba(colourValue) ? rgbaToRgbAlpha(colourValue) :
-				null;
-		return colour;
-	});
+export const rgbPrimaryValues = (colour) => {
+	const colourValue = trimPrefix('#', colour.value);
+	colour.rgb = isHex(colourValue) ? hexToRgb(colourValue) :
+		isRgba(colourValue) ? rgbaToRgbAlpha(colourValue) :
+			null;
+	return colour;
 };
 
 /**
- * Returns a new list of colour objects, augmenting each colour object with normalised R, G and B values
+ * Returns a new list of colour objects, augmenting each colour object with RGB values
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setNormalisedRgbPrimaryValues = (palette) => {
-	return deepCopyColourList(palette).map((colour) => {
-		const { rgb } = colour;
-		colour._r = normalisePrimary(rgb.r);
-		colour._g = normalisePrimary(rgb.g);
-		colour._b = normalisePrimary(rgb.b);
-		return colour;
-	});
+export const setRgbPrimaryValues = (palette) => mapNewColourList(palette)(rgbPrimaryValues);
+
+/**
+ * Augment each colour object with normalised R, G and B values
+ * @param {object} colour - colour map
+ * @returns {object} Augmented colour map
+ */
+const normalisedRgbPrimaryValues = (colour) => {
+	const { rgb } = colour;
+	colour._r = normalisePrimary(rgb.r);
+	colour._g = normalisePrimary(rgb.g);
+	colour._b = normalisePrimary(rgb.b);
+	return colour;
+};
+
+/**
+ * Returns a new list of colour objects, with each colour object augmented with normalised R, G and B values
+ * @param {Array} palette - list of starting colours
+ * @returns {Array} New list of colours
+ */
+export const setNormalisedRgbPrimaryValues = (palette) => mapNewColourList(palette)(normalisedRgbPrimaryValues);
+
+/**
+ * Augment colour objects with primary range values
+ * @param {object} colour - colour map
+ * @returns {object} Augmented colour map
+ */
+export const rgbPrimaryRangeVales = (colour) => {
+	const { _r, _g, _b } =  colour;
+	colour.primaryMin = Math.min(_r, _g, _b);
+	colour.primaryMax = Math.max(_r, _g, _b);
+	colour.primaryDelta = colour.primaryMax - colour.primaryMin;
+	return colour;
 };
 
 /**
@@ -120,38 +156,46 @@ export const setNormalisedRgbPrimaryValues = (palette) => {
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setRgbPrimaryRangeValues = (palette) => {
-	return deepCopyColourList(palette).map((colour) => {
-		const { _r, _g, _b } =  colour;
-		colour.primaryMin = Math.min(_r, _g, _b);
-		colour.primaryMax = Math.max(_r, _g, _b);
-		colour.primaryDelta = colour.primaryMax - colour.primaryMin;
-		return colour;
-	});
+export const setRgbPrimaryRangeValues = (palette) => mapNewColourList(palette)(rgbPrimaryRangeVales);
+
+/**
+ * Augment colour objects with colourType value (greyscale, alpha, opaque)
+ * @param {object} colour - colour map
+ * @returns {object} Augmented colour map
+ */
+export const colourType = (colour) => {
+	const { primaryDelta, rgb } = colour;
+	const isGreyscale = primaryDelta === 0;
+	const isAlpha = !!rgb.alpha;
+	const isOpaque = !isAlpha && !isGreyscale;
+	if (isGreyscale) {
+		colour.colourType = COLOUR_TYPE.GREYSCALE;
+	} else if (isAlpha) {
+		colour.colourType = COLOUR_TYPE.ALPHA;
+	} else if (isOpaque) {
+		colour.colourType = COLOUR_TYPE.OPAQUE;
+	} else {
+		colour.colourType = null;
+	}
+	return colour;
 };
 
 /**
- * Returns a new list of colour objects, augmenting each colour object with a colour type (greyscale, alpha, opaque)
+ * Returns a new list of colour objects, augmenting each colour object with a colour type
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setColourType = (palette) => {
-	return deepCopyColourList(palette).map((colour) => {
-		const { primaryDelta, rgb } = colour;
-		const isGreyscale = primaryDelta === 0;
-		const isAlpha = !!rgb.alpha;
-		const isOpaque = !isAlpha && !isGreyscale;
-		if (isGreyscale) {
-			colour.colourType = COLOUR_TYPE.GREYSCALE;
-		} else if (isAlpha) {
-			colour.colourType = COLOUR_TYPE.ALPHA;
-		} else if (isOpaque) {
-			colour.colourType = COLOUR_TYPE.OPAQUE;
-		} else {
-			colour.colourType = null;
-		}
-		return colour;
-	});
+export const setColourType = (palette) => mapNewColourList(palette)(colourType);
+
+/**
+ * Augment colour objects with a hue value
+ * @param {object} colour - colour map
+ * @returns {object} Augmented colour map
+ */
+export const hue = (colour) => {
+	const { colourType } = colour;
+	colour.hue = colourType === COLOUR_TYPE.GREYSCALE ? null : calcHue(colour);
+	return colour;
 };
 
 /**
@@ -159,13 +203,7 @@ export const setColourType = (palette) => {
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setHue = (palette) => {
-	return deepCopyColourList(palette).map((colour) => {
-		const { colourType } = colour;
-		colour.hue = colourType === COLOUR_TYPE.GREYSCALE ? null : calcHue(colour);
-		return colour;
-	});
-};
+export const setHue = (palette) => mapNewColourList(palette)(hue);
 
 /**
  * Calculates the hue value for a given colour
@@ -278,9 +316,9 @@ const cleanColour = ({ value, name }) => ({ value, name });
  */
 export const clean = (colourMap) => {
 	return {
-		[COLOUR_TYPE.OPAQUE]: deepCopyColourList(colourMap[COLOUR_TYPE.OPAQUE]).map(cleanColour),
-		[COLOUR_TYPE.ALPHA]: deepCopyColourList(colourMap[COLOUR_TYPE.ALPHA]).map(cleanColour),
-		[COLOUR_TYPE.GREYSCALE]: deepCopyColourList(colourMap[COLOUR_TYPE.GREYSCALE]).map(cleanColour),
+		[COLOUR_TYPE.OPAQUE]: mapNewColourList(colourMap[COLOUR_TYPE.OPAQUE])(cleanColour),
+		[COLOUR_TYPE.ALPHA]: mapNewColourList(colourMap[COLOUR_TYPE.ALPHA])(cleanColour),
+		[COLOUR_TYPE.GREYSCALE]: mapNewColourList(colourMap[COLOUR_TYPE.GREYSCALE])(cleanColour),
 	};
 };
 

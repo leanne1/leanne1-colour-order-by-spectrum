@@ -116,4 +116,4 @@ export const finalColourList = [...randomHexList, ...startPalette];
 
 // !!! This render must be commented out before publishing to gh-pages.
 // If you publish to gh-pages with this line commented in a React error is thrown on gh-pages
-// render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
+render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
