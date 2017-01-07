@@ -1,6 +1,6 @@
 require('./demo/styles/index.less');
-import React from 'react'
-import { render } from 'react-dom'
+import React from 'react';
+import { render } from 'react-dom';
 import DemoPage from './demo/components/DemoPage';
 import colours from './colour-swatch';
 
@@ -97,6 +97,8 @@ const startPalette = [
 
 
 // Utils to generate some random Hex codes for demo purposes
+const generateRandomHex = () => '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+
 const generateHexList = (count) => {
 	const hexList = [];
 	while (--count > 0) {
@@ -109,8 +111,9 @@ const generateHexList = (count) => {
 	};
 	return hexList;
 };
-const generateRandomHex = () => '#'+(Math.random()*0xFFFFFF<<0).toString(16);
 const randomHexList = generateHexList(100).filter((hex) => hex.value.length === 7);
 export const finalColourList = [...randomHexList, ...startPalette];
 
-render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
+// !!! This render must be commented out before publishing to gh-pages.
+// If you publish to gh-pages with this line commented in a React error is thrown on gh-pages
+// render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
