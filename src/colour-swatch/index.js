@@ -87,7 +87,6 @@ export const isRgba = (rgbaString) => {
 	return /rgba\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,?\s*([01]\.?\d*?)?\)/.test(rgbaString);
 };
 
-
 /**
  * Convert a primary R, G or B value to a normalised value fixed to 9dp
  * @param {number} primary - primary value to normalise
@@ -95,15 +94,12 @@ export const isRgba = (rgbaString) => {
  */
 export const normalisePrimary = (primary) => Number((primary / 255).toFixed(9));
 
-
-
-
 /**
- * Augment each colour object with with an RGB values hash
+ * Augment each colour object with an RGB values hash
  * @param {object} colour - colour map
  * @returns {object} Augmented colour map
  */
-export const rgbPrimaryValues = (colour) => {
+export const rgbPrimaryValue = (colour) => {
 	const colourValue = trimPrefix('#', colour.value);
 	colour.rgb = isHex(colourValue) ? hexToRgb(colourValue) :
 		isRgba(colourValue) ? rgbaToRgbAlpha(colourValue) :
@@ -116,14 +112,14 @@ export const rgbPrimaryValues = (colour) => {
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setRgbPrimaryValues = (palette) => mapNewColourList(palette)(rgbPrimaryValues);
+export const setRgbPrimaryValues = (palette) => mapNewColourList(palette)(rgbPrimaryValue);
 
 /**
  * Augment each colour object with normalised R, G and B values
  * @param {object} colour - colour map
  * @returns {object} Augmented colour map
  */
-const normalisedRgbPrimaryValues = (colour) => {
+const normalisedRgbPrimaryValue = (colour) => {
 	const { rgb } = colour;
 	colour._r = normalisePrimary(rgb.r);
 	colour._g = normalisePrimary(rgb.g);
@@ -136,7 +132,7 @@ const normalisedRgbPrimaryValues = (colour) => {
  * @param {Array} palette - list of starting colours
  * @returns {Array} New list of colours
  */
-export const setNormalisedRgbPrimaryValues = (palette) => mapNewColourList(palette)(normalisedRgbPrimaryValues);
+export const setNormalisedRgbPrimaryValues = (palette) => mapNewColourList(palette)(normalisedRgbPrimaryValue);
 
 /**
  * Augment colour objects with primary range values
@@ -188,6 +184,22 @@ export const colourType = (colour) => {
 export const setColourType = (palette) => mapNewColourList(palette)(colourType);
 
 /**
+ * Calculates the hue value for a given colour
+ * @param {object} colour - map of colour values
+ * @returns {number} A numerical hue value
+ */
+export const calcHue = (colour) => {
+	const { primaryMax, _r, _g, _b, primaryDelta } = colour;
+	if (primaryMax === _r) {
+		return 60 * ((_g - _b) / primaryDelta % 6);
+	} else if (primaryMax === _g) {
+		return 60 * ((_b - _r) / primaryDelta + 2);
+	} else if (primaryMax === _b) {
+		return 60 * ((_r - _g) / primaryDelta + 4);
+	}
+};
+
+/**
  * Augment colour objects with a hue value
  * @param {object} colour - colour map
  * @returns {object} Augmented colour map
@@ -204,22 +216,6 @@ export const hue = (colour) => {
  * @returns {Array} New list of colours
  */
 export const setHue = (palette) => mapNewColourList(palette)(hue);
-
-/**
- * Calculates the hue value for a given colour
- * @param {object} colour - map of colour values
- * @returns {number} A numerical hue value
- */
-export const calcHue = (colour) => {
-	const { primaryMax, _r, _g, _b, primaryDelta } = colour;
-	if (primaryMax === _r) {
-		return 60 * ((_g - _b) / primaryDelta % 6);
-	} else if (primaryMax === _g) {
-		return 60 * ((_b - _r) / primaryDelta + 2);
-	} else if (primaryMax === _b) {
-		return 60 * ((_r - _g) / primaryDelta + 4);
-	}
-};
 
 /**
  * Returns a list of colours filtered by colour type
