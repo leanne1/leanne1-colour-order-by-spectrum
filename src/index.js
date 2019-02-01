@@ -1,119 +1,137 @@
-require('./demo/styles/index.less');
-import React from 'react';
-import { render } from 'react-dom';
-import DemoPage from './demo/components/DemoPage';
-import colours from './colour-swatch';
+import rgba from "color-rgba";
+import flow from "lodash.flow";
 
-const startPalette = [
-	{
-		value: 'rgba(20,133,244,0.5)',
-		name: 'oceanBlue50pc'
-	},
-	{
-		value: 'rgba(216,22,4,0.5)',
-		name: 'venetianRed50pc'
-	},
-	{
-		value: '#888888',
-		name: 'middleEarth'
-	},
-	{
-		value: '#424242',
-		name: 'midDarkGrey',
-	},
-	{
-		value: '#a9a9a9',
-		name: 'darkGray',
-	},
-	{
-		value: 'rgba(30,144,255,0.8)',
-		name: 'dodgerBlue80pc',
-	},
-	{
-		value: '#696969',
-		name: 'dimGrey',
-	},
-	{
-		value: 'rgba(184,134,11,0.7)',
-		name: 'goldenRod70pc',
-	},
-	{
-		value: 'rgba(30,144,255,0.2)',
-		name: 'dodgerBlue20pc',
-	},
-	{
-		value: '#696969',
-		name: 'dimGrey',
-	},
-	{
-		value: 'rgba(184,134,11,0.4)',
-		name: 'goldenRod40pc',
-	},
-	{
-		value: 'rgba(128,0,0,0.4)',
-		name: 'maroon40pc',
-	},
-	{
-		value: '#dcdcdc',
-		name: 'gainsborough',
-	},
-	{
-		value: 'rgba(30,144,255,0.5)',
-		name: 'dodgerBlue50pc',
-	},
-	{
-		value: 'rgba(184,134,11,0.1)',
-		name: 'goldenRod10pc',
-	},
-	{
-		value: '#212121',
-		name: 'darkerGrey',
-	},
-	{
-		value: '#778899',
-		name: 'lightSlateGray',
-	},
-	{
-		value: 'rgba(128,0,0,0.95)',
-		name: 'maroon95pc',
-	},
-	{
-		value: '#808080',
-		name: 'grey',
-	},
-	{
-		value: 'rgba(184,134,11,1)',
-		name: 'goldenRod100pc',
-	},
-	{
-		value: '#757575',
-		name: 'anotherGrey',
-	},
-	{
-		value: '#EEEEEE',
-		name: 'shimmer',
-	},
-];
-
-
-// Utils to generate some random Hex codes for demo purposes
-const generateRandomHex = () => '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-
-const generateHexList = (count) => {
-	const hexList = [];
-	while (--count > 0) {
-		let nextCount = count;
-		const colour = generateRandomHex(nextCount);
-		hexList.push({
-			name: colour,
-			value: colour,
-		})
-	};
-	return hexList;
+export const COLOUR_TYPE = {
+  GREY: "grey",
+  ALPHA: "alpha",
+  OPAQUE: "opaque"
 };
-const randomHexList = generateHexList(100).filter((hex) => hex.value.length === 7);
-export const finalColourList = [...randomHexList, ...startPalette];
 
-// !!! This render must be commented out before publishing to gh-pages.
-// If you publish to gh-pages with this line commented in a React error is thrown on gh-pages
-render(<DemoPage colours={colours(finalColourList)} />, document.querySelector('#app'));
+// Convert an RGBA code to R, G, B and alpha hash
+export const rgbAlpha = colour => {
+  const [R, G, B, A] = rgba(colour);
+  return {
+    r: parseInt(R),
+    g: parseInt(G),
+    b: parseInt(B),
+    alpha: parseFloat(A)
+  };
+};
+
+// Calculates the hue value for a given colour
+export const calcHue = colour => {
+  const { primaryMax, _r, _g, _b, primaryDelta } = colour;
+  if (primaryMax === _r) {
+    return 60 * (((_g - _b) / primaryDelta) % 6);
+  } else if (primaryMax === _g) {
+    return 60 * ((_b - _r) / primaryDelta + 2);
+  } else if (primaryMax === _b) {
+    return 60 * ((_r - _g) / primaryDelta + 4);
+  }
+};
+
+// Sort colour by hue with red hues sorted lowest
+const sortByHue = (a, b) => a.hue - b.hue;
+
+// Sort colour by alpha value with most transparent sorted lowest
+const sortByAlpha = (a, b) => a.rgb.alpha - b.rgb.alpha;
+
+// Sort colour by red value (for greyscale)
+const sortByRed = (a, b) => a.rgb.r - b.rgb.r;
+
+// Sort colour by hue and then opacity with red hues / most opaque colours sorted lowest
+const sortAlpha = (a, b) =>
+  sortByHue(a, b) ? sortByHue(a, b) : sortByAlpha(a, b);
+
+// Dedupe palette input
+export const dedupe = (palette = []) =>
+  Array.isArray(palette)
+    ? palette.filter((item, i) => palette.indexOf(item) === i)
+    : [];
+
+// Returns a new list of colour objects, augmenting each colour object with RGB values
+export const setRgbPrimaryValues = palette =>
+  palette.map(colour => ({
+    colour,
+    rgb: rgbAlpha(colour)
+  }));
+
+// Remove invalid colours
+export const clean = palette =>
+  palette.filter(({ rgb }) => !Object.values(rgb).includes(NaN));
+
+// Returns a new list of colour objects, with each colour object augmented with normalised R, G and B values
+export const setNormalisedRgbPrimaryValues = palette =>
+  palette.map(colour => {
+    const normalisePrimary = primary => Number((primary / 255).toFixed(9));
+    const { rgb } = colour;
+    return {
+      ...colour,
+      _r: normalisePrimary(rgb.r),
+      _g: normalisePrimary(rgb.g),
+      _b: normalisePrimary(rgb.b)
+    };
+  });
+
+// Returns a new list of colour objects, augmenting each colour object with R, G and B range values
+export const setRgbPrimaryRangeValues = palette =>
+  palette.map(colour => {
+    const { _r, _g, _b } = colour;
+    const primaryMin = Math.min(_r, _g, _b);
+    const primaryMax = Math.max(_r, _g, _b);
+    const primaryDelta = primaryMax - primaryMin;
+    return {
+      ...colour,
+      primaryMin,
+      primaryMax,
+      primaryDelta
+    };
+  });
+
+// Returns a new list of colour objects, augmenting each colour object with a colour type (grey, alpha, opaque)
+export const setColourType = palette =>
+  palette.map(colour => ({
+    ...colour,
+    colourType:
+      colour.primaryDelta === 0 /* greyscale */
+        ? COLOUR_TYPE.GREY
+        : colour.rgb.alpha === 1 /* opaque */
+          ? COLOUR_TYPE.OPAQUE
+          : COLOUR_TYPE.ALPHA
+  }));
+
+// Returns a new list of colour objects, augmenting each colour object with a hue property
+export const setHue = palette =>
+  palette.map(colour => ({
+    ...colour,
+    hue: colour.colourType === COLOUR_TYPE.GREY ? null : calcHue(colour)
+  }));
+
+// Returns an object containing alpha, opaque and grey lists which each colour list sorted by spectrum
+export const sortColorsByGroup = palette => {
+  const filterByColourType = (palette, type) =>
+    palette.filter(colour => colour.colourType === type);
+  return {
+    [COLOUR_TYPE.ALPHA]: filterByColourType(palette, COLOUR_TYPE.ALPHA).sort(
+      sortAlpha
+    ),
+    [COLOUR_TYPE.OPAQUE]: filterByColourType(palette, COLOUR_TYPE.OPAQUE).sort(
+      sortByHue
+    ),
+    [COLOUR_TYPE.GREY]: filterByColourType(palette, COLOUR_TYPE.GREY).sort(
+      sortByRed
+    )
+  };
+};
+
+// PUBLIC API
+export default flow([
+  dedupe,
+  setRgbPrimaryValues,
+  clean,
+  setNormalisedRgbPrimaryValues,
+  setRgbPrimaryRangeValues,
+  setColourType,
+  setHue,
+  sortColorsByGroup
+]);
