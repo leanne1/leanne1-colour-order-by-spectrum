@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "precommit": "npm run prettier && npm run lint",
-    "prepush": "npm run lint && npm run test:unit"
+    "prepush": "npm run lint && npm run test:unit",
+    "deploy-storybook": "storybook-to-ghpages"
   },
   "dependencies": {
     "color-rgba": "^2.1.0",
@@ -22,6 +23,7 @@
     "@babel/preset-env": "^7.3.1",
     "@babel/register": "^7.0.0",
     "@storybook/react": "^4.1.11",
+    "@storybook/storybook-deployer": "^2.8.1",
     "babel-loader": "^8.0.5",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.2.0",
